@@ -1,12 +1,7 @@
 import pandas as pd
-import praw
-from pytz import timezone
-from datetime import datetime, timezone
-from Document import Document
-from Authors import Author
 from Corpus import Corpus
-from fonctions_TD3_TD4 import td3, td4_partie1, td4_partie2
-
+from SearchEngine import SearchEngine
+# v2
 def main():
 
     client_id='98hIeN0Mei2sSaV3FL9W9Q'
@@ -14,19 +9,44 @@ def main():
     user_agent='WebScraping'
     sujet = 'MachineLearning'
 
-    ## td3
-    # td3(client_id, client_secret, user_agent, sujet)
-    ## td4 partie 1
-    # id2doc = td4_partie1(client_id, client_secret, user_agent, sujet) # Crée le dictionnaire id2doc avec les objets Document et créé un id par doc
-    ## td4 partie 2
-    #id2doc, id2aut = td4_partie2(client_id, client_secret, user_agent, sujet) # Crée le dictionnaire id2doc avec les objets Document et créé un id par doc, crée le dictionnaire id2aut avec les objets Author et les ids des documents associés
-    
-    
-    #TD5 à 7
-    
-    corpus = Corpus(title=sujet)
-    corpus.load_from_net(client_id, client_secret, user_agent, sujet)
-    print(f"Corpus '{corpus.title}' chargé avec {len(corpus.id2document)} documents et {len(corpus.id2author)} auteurs.")
+    corpus = Corpus(title=sujet) # créer un objet corpus avec le titre du sujet
+    #corpus.load_from_net(client_id, client_secret, user_agent) # charger les documents depuis Reddit et Arxiv
+    #corpus.save_pickle(f'{sujet}_corpus.pkl') # sauvegarder le corpus dans un fichier pickle
+    corpus.load_from_pickle(f'{sujet}_corpus.pkl') # recharger le corpus depuis le fichier pickle
+    print(f"Corpus '{corpus.title}' chargé avec {corpus.ndoc} documents et {corpus.nauth} auteurs.")
+
+    #results_search = corpus.search("learning")
+    # print(results_search)
+    # results_concorde = corpus.concorde("learning", taille_context=50)
+    # print(results_concorde)
+    # corpus.search("learning")
+    # print(corpus._full_text[:500])  # afficher les 500 premiers caractères du texte complet du corpus
+    # text_propre = corpus.nettoyer_texte_full_text()
+    # print(text_propre[:500])  # afficher les 500 premiers caractères du texte nettoyé
+
+    #freq = corpus.vocabulaire(True) # True en parametre pour afficher un graphique
+    # print(f"Vocabulaire du corpus ({len(freq)} mots) :")
+    # print(freq)
+    # mat_TF_IDF = corpus.construire_matrice_tfidf() # Construction d'une matrice mot x document TF-IDF
+    # print(mat_TF_IDF)
+
+
+    ## Test de la classe Search Engine
+    search_engine = SearchEngine(corpus)
+    search_engine.load_from_pickle(f'{sujet}_corpus.pkl')
+    mots_cle = input("Entrez un ou plusieurs mot clé pour la recherche: ")
+
+    results = search_engine.search(mots_cle, nb_doc_retour=3)
+    print(type(results))
+
+
+
+
+
+
+
+
+
 
 if __name__ == "__main__":
     main()
