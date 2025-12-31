@@ -15,6 +15,7 @@ import numpy as np
 # On ne va pas s'embêter avec des getters et setters pour l'instant 
 # car les attributs ne sont jamais vraiment privés en Python
 
+
 class Corpus:
     # Singleton implementation pour n'avoir qu'une seule instance de Corpus
     _instance = None
@@ -24,14 +25,14 @@ class Corpus:
             cls._instance = super(Corpus, cls).__new__(cls)
         return cls._instance
     
-    def __init__(self, title):
+    def __init__(self, title, id2document=None, id2author=None):
         if not hasattr(self, '_initialized') or not self._initialized:
             self._initialized = True
             self.title = title
-            self.id2document = {}
-            self.id2author = {}
-            self.ndoc = 0
-            self.nauth = 0
+            self.id2document = id2document if id2document is not None else {}
+            self.id2author = id2author if id2author is not None else {}
+            self.ndoc = len(self.id2document)
+            self.nauth = len(self.id2author)
             self._full_text = None  # Pour stocker la concaténation complète
 
     def __str__(self):
@@ -260,39 +261,6 @@ class Corpus:
         texte_nettoye = re.sub(r"\s+", " ", texte_nettoye).strip()
         return texte_nettoye
     
-    def vocabulaireOLD(self):
-        """
-        Construit le vocabulaire unique du corpus après nettoyage des textes.
-        Retourne un DataFrame avec les mots, leur fréquence et le nombre de documents où ils apparaissent.
-        """
-        vocab = set()
-        for doc_id, document in self.id2document.items():
-            texte_nettoye = self._nettoyer_texte(document.text)
-            mots = texte_nettoye.split()
-            vocab.update((mot, doc_id) for mot in mots)
-
-        print(len(vocab), "mots uniques trouvés dans le corpus après nettoyage.")
-        full_text_nettoye = self.nettoyer_texte_full_text()     # Calcul des fréquences
-        mot_freq = {}
-        for mot in full_text_nettoye.split():
-            if mot not in mot_freq:
-                mot_freq[mot] = {"frequence": 0, "frequence_nb_doc": set()}
-            mot_freq[mot]["frequence"] += 1
-        
-        for mot, doc_id in vocab:
-            mot_freq[mot]["frequence_nb_doc"].add(doc_id)
-
-        # Construction du DataFrame
-        data = []
-        for mot, data_mot in mot_freq.items():
-            data.append({
-                "mot": mot,
-                "frequence": data_mot["frequence"],
-                "frequence_nb_doc": len(data_mot["frequence_nb_doc"])
-            })
-        freq = pd.DataFrame(data)
-        return freq
-    
     def vocabulaire(self, display=False):
         """
         Construit le vocabulaire unique du corpus après nettoyage des textes.
@@ -413,9 +381,6 @@ class Corpus:
         mat_TF = csr_matrix((data, (row_indices, col_indices)), shape=(num_docs, num_terms))
         return mat_TF
 
-    
-
-
 # TFxIDF(mot,document)=TF(mot,document)×log( N/NbDoc(mot))
     def construire_matrice_tfidf(self):
         #On utilise le dictionnaire vocab qui contient "mot", "frequence", "frequence_nb_doc" et "id"
@@ -432,3 +397,10 @@ class Corpus:
         return mat_TFxIDF
     
 
+    def get_all_publication_dates(self):
+        dates = []
+        for document in self.id2document.values():
+            if document.published:
+                dates.append(document.published)
+
+        return dates
